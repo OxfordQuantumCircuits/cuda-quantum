@@ -308,39 +308,39 @@ OQC
 .. _oqc-backend:
 
 `Oxford Quantum Circuits <https://oxfordquantumcircuits.com/>`__ (OQC) is currently providing CUDA-Q integration for multiple Quantum Processing Unit types.
-The 8 qubit ring topology Lucy device and the 32 qubit Kagome lattice topology Toshiko device are both supported via machine options described below.
+The 32 qubit Kagome lattice topology Toshiko device, and the 8 qubit noise-less circuit simulator (Lucy simulator) are both supported via machine options described below.
 
 Setting Credentials
 `````````````````````````
 
 In order to use the OQC devices you will need to register.
-Registration is achieved by contacting oqc_qcaas_support@oxfordquantumcircuits.com
+Registration is achieved either by contacting oqc_qcaas_support@oxfordquantumcircuits.com or visiting https://oqc.tech/access/oqc-cloud/.
 
-Once registered you will be able to authenticate with your ``email`` and ``password``
+Once registered you will be able to authenticate with your ``auth_token``
 
 There are three environment variables that the OQC target will look for during configuration:
 
-1. ``OQC_URL``
-2. ``OQC_EMAIL``
-3. ``OQC_PASSWORD`` - is mandatory
+1. ``OQC_URL`` (for most users, https://cloud.oqc.app)
+2. ``OQC_DEVICE`` (Lucy sim. qpu:uk:2:d865b5a184, otherwise check at http://cloud.oqc.app)
+3. ``OQC_AUTH_TOKEN`` (your own token is available on https://cloud.oqc.app)
 
 Submission from C++
 `````````````````````````
 
 To target quantum kernel code for execution on the OQC platform, provide the flag ``--target oqc`` to the ``nvq++`` compiler.
 
-Users may provide their :code:`email` and :code:`url` as extra arguments
+.. code:: bash
+
+    export OQC_URL=<url>
+    export OQC_DEVICE=<device_id>
+    export OQC_AUTH_TOKEN=<your_auth_token>
+    nvq++ --target oqc src.cpp -o executable
+
+To run the created executable, users just launch it just as a normal executable
 
 .. code:: bash
 
-    nvq++ --target oqc --oqc-email <email> --oqc-url <url> src.cpp -o executable
-
-Where both environment variables and extra arguments are supplied, precedent is given to the extra arguments.
-To run the output, provide the runtime loaded variables and invoke the pre-built executable
-
-.. code:: bash
-
-   OQC_PASSWORD=<password> ./executable
+   ./executable
 
 To emulate the OQC device locally, without submitting through the OQC QCaaS services, you can pass the ``--emulate`` flag to ``nvq++``.
 This will emit any target specific compiler warnings and diagnostics, before running a noise free emulation.
@@ -349,13 +349,6 @@ This will emit any target specific compiler warnings and diagnostics, before run
 
     nvq++ --emulate --target oqc src.cpp -o executable
 
-
-.. note::
-
-    The oqc target supports a ``--oqc-machine`` option.
-    The default is the 8 qubit Lucy device.
-    You can set this to be either ``toshiko`` or ``lucy`` via this flag.
-
 .. note::
 
     The OQC quantum assembly toolchain (qat) which is used to compile and execute instructions can be found on github as `oqc-community/qat <https://github.com/oqc-community/qat>`__
@@ -363,17 +356,17 @@ This will emit any target specific compiler warnings and diagnostics, before run
 Submission from Python
 `````````````````````````
 
-To set which OQC URL, set the :code:`url` parameter.
-To set which OQC email, set the :code:`email` parameter.
-To set which OQC machine, set the :code:`machine` parameter.
+The environment variables of OQC_URL, OQC_DEVICE, and OQC_AUTH_TOKEN are necessary as with C++. Users also can define those within Python codes as
 
 .. code:: python
 
     import os
     import cudaq
     # ...
-    os.environ['OQC_PASSWORD'] = password
-    cudaq.set_target("oqc", url=url, machine="lucy")
+    os.environ['OQC_URL'] = "https://cloud.oqc.app"
+    os.environ['OQC_DEVICE'] = "qpu:uk:2:d865b5a184"
+    os.environ['OQC_AUTH_TOKEN'] = your_auth_token
+    cudaq.set_target("oqc")
 
 You can then execute a kernel against the platform using the OQC Lucy device
 
